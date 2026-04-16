@@ -2,10 +2,63 @@
 <html lang="en">
     <head>
         <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     </head>
     <body>
         <video id="video" style="display:none"></video>
         <canvas id="canvas" width="640" height="480"></canvas>
     </body>
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // 1. render loop defined FIRST
+        function renderLoop() {
+            ctx.save();
+            ctx.scale(-1, 1);
+            ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+            ctx.restore();
+            requestAnimationFrame(renderLoop);
+        }
+
+        // 2. set up hands model
+        const hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.7,
+        });
+
+        // 3. on results just draws the dot
+        hands.onResults(result => {
+            if (result.multiHandLandmarks && result.multiHandLandmarks[0]) {
+                const tip = result.multiHandLandmarks[0][8];
+                const x = (1 - tip.x) * canvas.width;
+                const y = tip.y * canvas.height;
+
+                ctx.beginPath();
+                ctx.arc(x, y, 12, 0, Math.PI * 2);
+                ctx.fillStyle = 'red';
+                ctx.fill();
+            }
+        });
+
+        // 4. start camera, then start render loop when video is ready
+        const camera = new Camera(video, {
+            onFrame: async () => await hands.send({ image: video }),
+            width: 640,
+            height: 480
+        });
+
+        camera.start();
+
+        video.addEventListener('loadeddata', () => {
+            console.log('video ready!');
+            renderLoop();
+        });
+    </script>
 </html>
