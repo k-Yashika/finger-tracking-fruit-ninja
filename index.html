@@ -25,7 +25,7 @@
                 x: Math.random() * canvas.width, // random horizontal postion
                 y: canvas.height + 50, // starts just below the screen
                 vx: (Math.random() - 0.5) * 6, // random left/right drift
-                vy: -(Math.random() * 8) + 14, // shoot upward
+                vy: -(Math.random() * 8 + 14), // shoot upward
                 radius: 40,
                 sliced: false,
                 color: 'green' //placeholder, to be replaced with image later
@@ -113,8 +113,8 @@
         hands.onResults(result => {
             if (result.multiHandLandmarks && result.multiHandLandmarks[0]) {
                 const tip = result.multiHandLandmarks[0][8];
-                const x = (1 - tip.x) * canvas.width;
-                const y = tip.y * canvas.height;
+                fingerX = (1 - tip.x) * canvas.width;
+                fingerY = tip.y * canvas.height;
 
                 ctx.beginPath();
                 ctx.arc(x, y, 12, 0, Math.PI * 2);
@@ -135,7 +135,7 @@
         video.addEventListener('loadeddata', () => {
             console.log('video ready!');
             renderLoop();
-            setInterval(() => fruits.push(createFruits()), 1000); // new fruits spawns every second
+            setInterval(() => fruits.push(createFruit()), 1000); // new fruits spawns every second
         
         });
     </script>
