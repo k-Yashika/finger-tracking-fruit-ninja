@@ -12,6 +12,33 @@
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+        
+        /* Fruit Logic*/
+
+        function createFruit(){
+            return{
+                x: Math.random() * canvas.width, // random horizontal postion
+                y: canvas.height + 50, // starts just below the screen
+                vx: (Math.random() - 0.5) * 6, // random left/right drift
+                vy: -(Math.random() * 8) + 14, // shoot upward
+                radius: 40,
+                sliced: false,
+                color: 'green' //placeholder, to be replaced with image later
+            };
+        }
+
+        function updateFruits(){
+            fruits.forEach(fruit => {
+                fruit.x += fruit.vx;
+                fruit.y += fruit.vy;
+                fruit.vy += 0.5; // gravity - fruit is pulled down every frame
+            });
+
+            // removing the fuit once it is out of frame
+            fruits = fruits.filter(fruit => fruit.y < canvas.height + 100);
+        }
+        
+        /* Hand Detection */
 
         // 1. render loop defined FIRST
         function renderLoop() {
