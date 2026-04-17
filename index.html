@@ -12,7 +12,12 @@
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        
+
+        let fruits = [];
+        let prevX = 0, prevY = 0;
+        let score = 0;
+        let fingerX = 0, fingerY = 0;
+
         /* Fruit Logic*/
 
         function createFruit(){
@@ -37,6 +42,45 @@
             // removing the fuit once it is out of frame
             fruits = fruits.filter(fruit => fruit.y < canvas.height + 100);
         }
+
+        function drawFruits(){
+            fruits.forEach(fruit => {
+                if(!fruit.sliced){
+                    ctx.beginPath();
+                    ctx.arc(fruit.x, fruit.y, fruit.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = fruit.color;
+                    ctx.fill();
+                }
+            });
+        }
+
+        // Slice detection - to check if the finger's path intersects with the fruit
+        function distToSegment(px, py, ax, ay, bx, by){
+            const dx = bx - ax, dy = by -ay;
+            const lenSq = dx * dx + dy * dy;
+            let t = ((px - ax) * dx + (py - ay) * dy) / lenSq;
+            t = Math.max(0, Math.min(1, t));
+            const nearX = ax + t * dx;
+            const nearY = ay + t * dy;
+            const ex = px - nearX, ey = py - nearY;
+            return Math.sqrt(ex * ex + ey * ey);
+        }
+
+        function checkSlice(fingerX, fingerY){
+            fruits.forEach(fruit => {
+                if (!fruit.sliced) {
+                    const dist = distToSegment(fruit.x, fruit.y, prevX, prevY, fingerX, fingerY);
+                    if (dist < fruit.radius) {
+                        fruit.sliced = true;
+                        score++;
+                        console.log('sliced! score: ' + score);
+                    }
+                }
+            });
+
+            prevX = fingerX;
+            prevY = fingerY;
+        }
         
         /* Hand Detection */
 
@@ -46,6 +90,11 @@
             ctx.scale(-1, 1);
             ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
             ctx.restore();
+
+            updateFruits();
+            drawFruits();
+            checkSlice();
+
             requestAnimationFrame(renderLoop);
         }
 
@@ -86,6 +135,8 @@
         video.addEventListener('loadeddata', () => {
             console.log('video ready!');
             renderLoop();
+            setInterval(() => fruits.push(createFruits()), 1000); // new fruits spawns every second
+        
         });
     </script>
 </html>
